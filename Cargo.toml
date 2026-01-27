@@ -1,0 +1,9 @@
+[package]
+name = "nix-snake"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+crossterm = "29"
+rand = "8.5"
+clap = "4.5.54"
