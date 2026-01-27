@@ -2,7 +2,7 @@
 
 A lightweight, terminal-based Snake game and screensaver written in Rust.
 
-![snowflake-bounce demo](https://raw.githubusercontent.com/saylesss88/nix-snake/main/demo.gif)
+![snowflake-bounce demo](https://raw.githubusercontent.com/saylesss88/nix-snake/main/assets/demo.gif)
 
 Watch a NixOS Lambda (λ) navigate your terminal, consuming snowflakes and
 packages in an infinite loop, or take control and play yourself.
