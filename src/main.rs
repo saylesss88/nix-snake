@@ -5,9 +5,36 @@ use crossterm::{
     style::{Color, Print, SetForegroundColor},
     terminal::{self, disable_raw_mode, enable_raw_mode},
 };
+use rand::Rng;
 use std::collections::VecDeque;
 use std::io::{stdout, Write};
 use std::time::Duration;
+
+struct Food {
+    x: u16,
+    y: u16,
+    symbol: char, // '❄' or '📦'
+}
+
+impl Food {
+    // We need to know screen size to spawn randomly
+    fn new(width: u16, height: u16) -> Self {
+        let mut rng = rand::thread_rng();
+        Self {
+            x: rng.gen_range(0..width),
+            y: rng.gen_range(0..height),
+            // Randomly pick a symbol
+            symbol: if rng.gen_bool(0.5) { '❄' } else { '📦' },
+        }
+    }
+
+    fn respawn(&mut self, width: u16, height: u16) {
+        let mut rng = rand::thread_rng();
+        self.x = rng.gen_range(0..width);
+        self.y = rng.gen_range(0..height);
+        self.symbol = if rng.gen_bool(0.5) { '❄' } else { '📦' };
+    }
+}
 
 // direction constants
 const RIGHT: (i16, i16) = (1, 0);
@@ -33,7 +60,7 @@ impl Snake {
         }
     }
 
-    fn update(&mut self) {
+    fn update(&mut self, max_width: u16, max_height: u16) {
         // 1. Get current head
         let (head_x, head_y) = *self.body.front().expect("Snake has no body");
 
@@ -45,8 +72,8 @@ impl Snake {
         // 3. Boundary Check (Simple Wrap-around for screensaver vibe)
         // If it goes off screen (approx 80x24 for now, we'll get real size later), wrap it.
         // Let's use a fixed size for this step to prevent crashes.
-        let width: i16 = 80;
-        let height: i16 = 24;
+        let width = max_width as i16;
+        let height = max_height as i16;
 
         // Force the variable type to be i16
         let new_x: i16 = if next_x < 0 {
@@ -82,6 +109,9 @@ fn main() -> std::io::Result<()> {
     let mut snake = Snake::new();
     let mut running = true;
 
+    let (w, h) = terminal::size()?;
+    let mut food = Food::new(w, h);
+
     // Game Loop
     while running {
         // 1. Handle Input (just quitting for now)
@@ -100,11 +130,34 @@ fn main() -> std::io::Result<()> {
         }
 
         // 2. Update
-        snake.update();
+        let (term_cols, term_rows) = terminal::size()?;
+        snake.update(term_cols, term_rows);
 
         // 3. Draw
         // Clear screen
         execute!(stdout, terminal::Clear(terminal::ClearType::All))?;
+
+        execute!(
+            stdout,
+            cursor::MoveTo(food.x, food.y),
+            SetForegroundColor(Color::Red), // Make food Red or White
+            Print(food.symbol)
+        )?;
+
+        if let Some(&(head_x, head_y)) = snake.body.front() {
+            if head_x == food.x && head_y == food.y {
+                // Respawn food
+                let (w, h) = terminal::size()?;
+                food.respawn(w, h);
+
+                // GROW: To grow, we just skip the `pop_back` we did in update().
+                // But since `update` does pop_back automatically, the easiest way
+                // is to just add a dummy tail segment back, OR change `update` logic.
+                if let Some(&tail) = snake.body.back() {
+                    snake.body.push_back(tail);
+                }
+            }
+        }
 
         for (i, point) in snake.body.iter().enumerate() {
             // Head gets the Lambda, body gets a different char
