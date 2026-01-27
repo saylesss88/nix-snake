@@ -10,6 +10,12 @@ use std::collections::VecDeque;
 use std::io::{stdout, Write};
 use std::time::Duration;
 
+#[derive(PartialEq)]
+enum Mode {
+    Auto,
+    Manual,
+}
+
 struct Food {
     x: u16,
     y: u16,
@@ -98,6 +104,33 @@ impl Snake {
         // 5. Remove tail (Simulate movement, not growing yet)
         self.body.pop_back();
     }
+
+    fn set_direction(&mut self, new_dir: (i16, i16)) {
+        // Prevent 180 turns (banning reversing)
+        // If current is RIGHT (1,0) and new is LEFT (-1,0), sum is (0,0).
+        // This simple check works for opposite cardinal directions.
+        if (self.dir.0 + new_dir.0 != 0) || (self.dir.1 + new_dir.1 != 0) {
+            self.dir = new_dir;
+        }
+    }
+
+    // The AI Logic
+    fn autopilot(&mut self, food_x: u16, food_y: u16) {
+        let (head_x, head_y) = *self.body.front().unwrap();
+
+        // Determine ideal direction
+        // Prioritize X movement first (arbitrary choice)
+        if head_x < food_x && self.dir != LEFT {
+            self.set_direction(RIGHT);
+        } else if head_x > food_x && self.dir != RIGHT {
+            self.set_direction(LEFT);
+        } else if head_y < food_y && self.dir != UP {
+            self.set_direction(DOWN);
+        } else if head_y > food_y && self.dir != DOWN {
+            self.set_direction(UP);
+        }
+        // Else: keep going current direction (or pick random safe turn if stuck)
+    }
 }
 
 fn main() -> std::io::Result<()> {
@@ -111,6 +144,7 @@ fn main() -> std::io::Result<()> {
 
     let (w, h) = terminal::size()?;
     let mut food = Food::new(w, h);
+    let mut mode = Mode::Auto; // Start in screensaver mode
 
     // Game Loop
     while running {
@@ -119,24 +153,52 @@ fn main() -> std::io::Result<()> {
             if let Event::Key(KeyEvent { code, .. }) = event::read()? {
                 match code {
                     KeyCode::Char('q') | KeyCode::Esc => running = false,
-                    // Manual Controls
-                    KeyCode::Left => snake.dir = LEFT,
-                    KeyCode::Right => snake.dir = RIGHT,
-                    KeyCode::Up => snake.dir = UP,
-                    KeyCode::Down => snake.dir = DOWN,
+
+                    // Toggle Mode explicitly
+                    KeyCode::Char('a') => mode = Mode::Auto,
+
+                    // Manual Controls -> Switch to Manual Mode automatically
+                    KeyCode::Left => {
+                        mode = Mode::Manual;
+                        snake.set_direction(LEFT);
+                    }
+                    KeyCode::Right => {
+                        mode = Mode::Manual;
+                        snake.set_direction(RIGHT);
+                    }
+                    KeyCode::Up => {
+                        mode = Mode::Manual;
+                        snake.set_direction(UP);
+                    }
+                    KeyCode::Down => {
+                        mode = Mode::Manual;
+                        snake.set_direction(DOWN);
+                    }
+
                     _ => {}
                 }
             }
         }
 
+        // 2. Logic
+        if mode == Mode::Auto {
+            snake.autopilot(food.x, food.y);
+        }
+
         // 2. Update
         let (term_cols, term_rows) = terminal::size()?;
+
         snake.update(term_cols, term_rows);
 
         // 3. Draw
         // Clear screen
+
         execute!(stdout, terminal::Clear(terminal::ClearType::All))?;
 
+        let mode_text = match mode {
+            Mode::Auto => "AUTO (Press Arrows to Play)",
+            Mode::Manual => "MANUAL (Press 'a' for Auto)",
+        };
         execute!(
             stdout,
             cursor::MoveTo(food.x, food.y),

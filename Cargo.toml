@@ -1,7 +1,22 @@
 [package]
 name = "nix-snake"
+description = "A NixOS themed classic snake game with screensaver mode & gameplay mode"
 version = "0.1.0"
 edition = "2024"
+authors = ["T. Sawyer <saylesss87@proton.me"]
+repository = "https://github.com/saylesss88/nix-snake"
+readme = "README.md"
+keywords = ["rust", "terminal", "screensaver", "game"]
+homepage = "https://github.com/saylesss88/nix-snake"
+license = "Apache-2.0"
+exclude = [
+	"result",
+	"docs",
+	".github/",
+	".gitignore",
+	"flake.nix",
+	"flake.lock",
+]
 
 [dependencies]
 crossterm = "0.29.0"
