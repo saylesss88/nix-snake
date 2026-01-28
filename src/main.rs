@@ -256,8 +256,8 @@ fn main() -> std::io::Result<()> {
                 // Increase Score and Speed
                 score += 10;
                 // Decrease sleep time by 2ms, capping at 30ms (super fast)
-                if speed > Duration::from_millis(30) {
-                    speed -= Duration::from_millis(2);
+                if speed > Duration::from_millis(40) {
+                    speed -= Duration::from_millis(10);
                 }
             }
         }
@@ -310,8 +310,8 @@ fn main() -> std::io::Result<()> {
         }
         // Draw Score and Mode at the bottom
         let status_text = match mode {
-            Mode::Auto => format!("AUTO | Score: {}", score),
-            Mode::Manual => format!("MANUAL | Score: {}", score),
+            Mode::Auto => format!("AUTO | Score: {} | Speed: {}ms", score, speed.as_millis()),
+            Mode::Manual => format!("MANUAL | Score: {} | Speed: {}ms", score, speed.as_millis()),
         };
 
         execute!(
