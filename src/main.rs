@@ -66,6 +66,24 @@ impl Snake {
         }
     }
 
+    fn check_self_collision(&self) -> bool {
+        let (head_x, head_y) = *self.body.front().expect("Snake has no body");
+        // Skip the first element (the head) and check the rest
+        self.body
+            .iter()
+            .skip(1)
+            .any(|&(x, y)| x == head_x && y == head_y)
+    }
+
+    // Helper to reset snake on death
+    fn reset(&mut self) {
+        self.body.clear();
+        self.body.push_back((10, 10));
+        self.body.push_back((9, 10));
+        self.body.push_back((8, 10));
+        self.dir = RIGHT;
+    }
+
     fn update(&mut self, max_width: u16, max_height: u16) {
         // 1. Get current head
         let (head_x, head_y) = *self.body.front().expect("Snake has no body");
@@ -145,11 +163,14 @@ fn main() -> std::io::Result<()> {
     let (w, h) = terminal::size()?;
     let mut food = Food::new(w, h);
     let mut mode = Mode::Auto; // Start in screensaver mode
+                               // Score and Speed vars
+    let mut score = 0;
+    let mut speed = Duration::from_millis(100);
 
     // Game Loop
     while running {
         // 1. Handle Input (just quitting for now)
-        if event::poll(Duration::from_millis(100))? {
+        if event::poll(speed)? {
             if let Event::Key(KeyEvent { code, .. }) = event::read()? {
                 match code {
                     KeyCode::Char('q') | KeyCode::Esc => running = false,
@@ -180,20 +201,55 @@ fn main() -> std::io::Result<()> {
             }
         }
 
-        // 2. Logic
+        // 2. Logic & Update
         if mode == Mode::Auto {
             snake.autopilot(food.x, food.y);
         }
 
-        // 2. Update
+        // Update
         let (term_cols, term_rows) = terminal::size()?;
 
         snake.update(term_cols, term_rows - 1);
+
+        // Check for Death (Self Collision)
+        if snake.check_self_collision() {
+            // Reset game state
+            snake.reset();
+            score = 0;
+            speed = Duration::from_millis(100);
+
+            // Flash screen red to indicate hit
+            execute!(
+                stdout,
+                terminal::Clear(terminal::ClearType::All),
+                SetForegroundColor(Color::Red)
+            )?;
+        }
 
         // 3. Draw
         // Clear screen
 
         execute!(stdout, terminal::Clear(terminal::ClearType::All))?;
+
+        // Food Collision & Score Update
+        if let Some(&(head_x, head_y)) = snake.body.front() {
+            if head_x == food.x && head_y == food.y {
+                let (w, h) = terminal::size()?;
+                food.respawn(w, h);
+
+                // Grow
+                if let Some(&tail) = snake.body.back() {
+                    snake.body.push_back(tail);
+                }
+
+                // Increase Score and Speed
+                score += 10;
+                // Decrease sleep time by 2ms, capping at 30ms (super fast)
+                if speed > Duration::from_millis(30) {
+                    speed -= Duration::from_millis(2);
+                }
+            }
+        }
 
         let mode_text = match mode {
             Mode::Auto => "AUTO (Press Arrows to Play)",
@@ -241,6 +297,18 @@ fn main() -> std::io::Result<()> {
 
             // Flush output
         }
+        // Draw Score and Mode at the bottom
+        let status_text = match mode {
+            Mode::Auto => format!("AUTO | Score: {}", score),
+            Mode::Manual => format!("MANUAL | Score: {}", score),
+        };
+
+        execute!(
+            stdout,
+            cursor::MoveTo(0, term_rows - 1),
+            SetForegroundColor(Color::Yellow),
+            Print(status_text)
+        )?;
         stdout.flush()?;
     }
     // Cleanup
