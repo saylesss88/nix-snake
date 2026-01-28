@@ -2,7 +2,7 @@ use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEvent},
     execute,
-    style::{Color, Print, SetForegroundColor},
+    style::{Color, Print, SetBackgroundColor, SetForegroundColor},
     terminal::{self, disable_raw_mode, enable_raw_mode},
 };
 use rand::Rng;
@@ -213,17 +213,28 @@ fn main() -> std::io::Result<()> {
 
         // Check for Death (Self Collision)
         if snake.check_self_collision() {
-            // Reset game state
+            // 1. Flash Screen Red
+            execute!(
+                stdout,
+                SetBackgroundColor(Color::Red), // Set bg to red
+                terminal::Clear(terminal::ClearType::All)  // Fill screen with red
+            )?;
+            stdout.flush()?; // Force display NOW
+
+            // 2. Freeze for 200ms so the player sees the hit
+            std::thread::sleep(Duration::from_millis(200));
+
+            // 3. Reset Colors
+            execute!(
+                stdout,
+                SetBackgroundColor(Color::Reset),
+                terminal::Clear(terminal::ClearType::All)
+            )?;
+
+            // 4. Reset Game State
             snake.reset();
             score = 0;
             speed = Duration::from_millis(100);
-
-            // Flash screen red to indicate hit
-            execute!(
-                stdout,
-                terminal::Clear(terminal::ClearType::All),
-                SetForegroundColor(Color::Red)
-            )?;
         }
 
         // 3. Draw
