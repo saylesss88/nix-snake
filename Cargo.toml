@@ -11,11 +11,12 @@ homepage = "https://github.com/saylesss88/nix-snake"
 license = "Apache-2.0"
 exclude = [
 	"result",
-	"docs",
+	"docs/*",
 	".github/",
 	".gitignore",
 	"flake.nix",
 	"flake.lock",
+	"assets/*",
 ]
 
 [dependencies]
