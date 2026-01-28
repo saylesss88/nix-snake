@@ -188,7 +188,7 @@ fn main() -> std::io::Result<()> {
         // 2. Update
         let (term_cols, term_rows) = terminal::size()?;
 
-        snake.update(term_cols, term_rows);
+        snake.update(term_cols, term_rows - 1);
 
         // 3. Draw
         // Clear screen
@@ -199,6 +199,14 @@ fn main() -> std::io::Result<()> {
             Mode::Auto => "AUTO (Press Arrows to Play)",
             Mode::Manual => "MANUAL (Press 'a' for Auto)",
         };
+        // Display the mode text at the bottom of the screen
+        execute!(
+            stdout,
+            cursor::MoveTo(0, term_rows - 1), // Bottom row
+            SetForegroundColor(Color::Yellow),
+            Print(mode_text)
+        )?;
+
         execute!(
             stdout,
             cursor::MoveTo(food.x, food.y),
@@ -232,8 +240,8 @@ fn main() -> std::io::Result<()> {
             )?;
 
             // Flush output
-            stdout.flush()?;
         }
+        stdout.flush()?;
     }
     // Cleanup
     execute!(stdout, cursor::Show, terminal::LeaveAlternateScreen)?;

@@ -44,6 +44,14 @@ crates.io
 cargo install nix-snake
 ```
 
+Nix:
+
+```bash
+nix run github:saylesss88/nix-snake
+# If it gives you problems try:
+nix run --no-write-lock-file github:saylesss88/nix-snake
+```
+
 ---
 
 ## 🕹️ Controls
@@ -51,3 +59,5 @@ cargo install nix-snake
 - `a`: Switch to Autopilot (Screensaver) Mode
 
 - `q`/ `Esc`: Quit
+
+- Arrow keys: Start playing
