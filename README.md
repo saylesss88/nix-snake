@@ -61,3 +61,7 @@ nix run --no-write-lock-file github:saylesss88/nix-snake
 - `q`/ `Esc`: Quit
 
 - Arrow keys: Start playing
+
+- The speed gets faster with every package/snowflake eaten
+
+- The screen flashes red on death & auto-restarts with a body length of 3
