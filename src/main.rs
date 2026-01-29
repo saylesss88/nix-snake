@@ -3,11 +3,11 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEvent},
     execute,
     style::{Color, Print, SetBackgroundColor, SetForegroundColor},
-    terminal::{self, disable_raw_mode, enable_raw_mode},
+    terminal::{self},
 };
 use rand::Rng;
 use std::collections::VecDeque;
-use std::io::{stdout, Write};
+use std::io::{Write, stdout};
 use std::time::Duration;
 
 #[derive(PartialEq)]
@@ -25,20 +25,19 @@ struct Food {
 impl Food {
     // We need to know screen size to spawn randomly
     fn new(width: u16, height: u16) -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         Self {
-            x: rng.gen_range(0..width),
-            y: rng.gen_range(0..height),
-            // Randomly pick a symbol
-            symbol: if rng.gen_bool(0.5) { '❄' } else { '📦' },
+            x: rng.random_range(0..width),
+            y: rng.random_range(0..height),
+            symbol: if rng.random_bool(0.5) { '❄' } else { '📦' },
         }
     }
 
     fn respawn(&mut self, width: u16, height: u16) {
-        let mut rng = rand::thread_rng();
-        self.x = rng.gen_range(0..width);
-        self.y = rng.gen_range(0..height);
-        self.symbol = if rng.gen_bool(0.5) { '❄' } else { '📦' };
+        let mut rng = rand::rng();
+        self.x = rng.random_range(0..width);
+        self.y = rng.random_range(0..height.saturating_sub(1));
+        self.symbol = if rng.random_bool(0.5) { '❄' } else { '📦' };
     }
 }
 
@@ -85,45 +84,21 @@ impl Snake {
     }
 
     fn update(&mut self, max_width: u16, max_height: u16) {
-        // 1. Get current head
         let (head_x, head_y) = *self.body.front().expect("Snake has no body");
 
-        // 2. Calculate new head position
-        // We cast to i16 to handle negative checking, then wrap/clamp
-        let next_x = head_x as i16 + self.dir.0;
-        let next_y = head_y as i16 + self.dir.1;
+        // Use i32::from() for lossless conversion from u16/i16 to i32
+        let next_x = (i32::from(head_x) + i32::from(self.dir.0)).rem_euclid(i32::from(max_width));
 
-        // 3. Boundary Check (Simple Wrap-around for screensaver vibe)
-        // If it goes off screen (approx 80x24 for now, we'll get real size later), wrap it.
-        // Let's use a fixed size for this step to prevent crashes.
-        let width = max_width as i16;
-        let height = max_height as i16;
+        let next_y = (i32::from(head_y) + i32::from(self.dir.1)).rem_euclid(i32::from(max_height));
 
-        // Force the variable type to be i16
-        let new_x: i16 = if next_x < 0 {
-            width - 1
-        } else if next_x >= width {
-            0
-        } else {
-            next_x
-        };
+        // We still use 'as u16' at the very end to put it back in the deque
 
-        let new_y: i16 = if next_y < 0 {
-            height - 1
-        } else if next_y >= height {
-            0
-        } else {
-            next_y
-        };
-
-        // Now we explicitly cast to u16 only at the very end
-        self.body.push_front((new_x as u16, new_y as u16));
-
-        // 5. Remove tail (Simulate movement, not growing yet)
+        #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+        self.body.push_front((next_x as u16, next_y as u16));
         self.body.pop_back();
     }
 
-    fn set_direction(&mut self, new_dir: (i16, i16)) {
+    const fn set_direction(&mut self, new_dir: (i16, i16)) {
         // Prevent 180 turns (banning reversing)
         // If current is RIGHT (1,0) and new is LEFT (-1,0), sum is (0,0).
         // This simple check works for opposite cardinal directions.
@@ -150,180 +125,165 @@ impl Snake {
         // Else: keep going current direction (or pick random safe turn if stuck)
     }
 }
+fn setup_terminal() -> std::io::Result<()> {
+    crossterm::terminal::enable_raw_mode()?;
+    crossterm::execute!(
+        std::io::stdout(),
+        crossterm::terminal::EnterAlternateScreen,
+        crossterm::cursor::Hide
+    )?;
+    Ok(())
+}
+
+fn restore_terminal() -> std::io::Result<()> {
+    crossterm::execute!(
+        std::io::stdout(),
+        crossterm::terminal::LeaveAlternateScreen,
+        crossterm::cursor::Show
+    )?;
+    crossterm::terminal::disable_raw_mode()?;
+    Ok(())
+}
+
+fn handle_input(mode: &mut Mode, snake: &mut Snake, running: &mut bool) -> std::io::Result<()> {
+    if event::poll(Duration::from_millis(100))?
+        && let Event::Key(KeyEvent { code, .. }) = event::read()?
+    {
+        match code {
+            KeyCode::Char('q') | KeyCode::Esc => *running = false,
+            KeyCode::Char('a') => *mode = Mode::Auto,
+            KeyCode::Left => {
+                *mode = Mode::Manual;
+                snake.set_direction(LEFT);
+            }
+            KeyCode::Right => {
+                *mode = Mode::Manual;
+                snake.set_direction(RIGHT);
+            }
+            KeyCode::Up => {
+                *mode = Mode::Manual;
+                snake.set_direction(UP);
+            }
+            KeyCode::Down => {
+                *mode = Mode::Manual;
+                snake.set_direction(DOWN);
+            }
+            _ => {}
+        }
+    }
+    Ok(())
+}
+
+fn handle_collision(snake: &mut Snake, stdout: &mut std::io::Stdout) -> std::io::Result<()> {
+    execute!(
+        stdout,
+        SetBackgroundColor(Color::Red),
+        terminal::Clear(terminal::ClearType::All)
+    )?;
+    stdout.flush()?;
+    std::thread::sleep(Duration::from_millis(200));
+    execute!(
+        stdout,
+        SetBackgroundColor(Color::Reset),
+        terminal::Clear(terminal::ClearType::All)
+    )?;
+    snake.reset();
+    Ok(())
+}
+
+fn draw_game(
+    stdout: &mut std::io::Stdout,
+    snake: &Snake,
+    food: &Food,
+    mode: &Mode,
+    score: u32,
+    speed: Duration,
+    term_rows: u16,
+) -> std::io::Result<()> {
+    execute!(stdout, terminal::Clear(terminal::ClearType::All))?;
+
+    let mode_text = match mode {
+        Mode::Auto => "AUTO (Press Arrows to Play)",
+        Mode::Manual => "MANUAL (Press 'a' for Auto)",
+    };
+    execute!(
+        stdout,
+        cursor::MoveTo(0, term_rows - 1),
+        SetForegroundColor(Color::Yellow),
+        Print(mode_text)
+    )?;
+
+    execute!(
+        stdout,
+        cursor::MoveTo(food.x, food.y),
+        SetForegroundColor(Color::Red),
+        Print(food.symbol)
+    )?;
+
+    for (i, point) in snake.body.iter().enumerate() {
+        let symbol = if i == 0 { "λ" } else { "o" };
+        execute!(
+            stdout,
+            cursor::MoveTo(point.0, point.1),
+            SetForegroundColor(Color::Cyan),
+            Print(symbol)
+        )?;
+    }
+
+    let status_text = match mode {
+        Mode::Auto => format!("AUTO | Score: {} | Speed: {}ms", score, speed.as_millis()),
+        Mode::Manual => format!("MANUAL | Score: {} | Speed: {}ms", score, speed.as_millis()),
+    };
+    execute!(
+        stdout,
+        cursor::MoveTo(0, term_rows - 1),
+        SetForegroundColor(Color::Yellow),
+        Print(status_text)
+    )?;
+    stdout.flush()?;
+    Ok(())
+}
 
 fn main() -> std::io::Result<()> {
-    // Setup
-    enable_raw_mode()?;
+    setup_terminal()?;
     let mut stdout = stdout();
-    execute!(stdout, terminal::EnterAlternateScreen, cursor::Hide)?;
-
     let mut snake = Snake::new();
     let mut running = true;
-
     let (w, h) = terminal::size()?;
     let mut food = Food::new(w, h);
-    let mut mode = Mode::Auto; // Start in screensaver mode
-                               // Score and Speed vars
+    let mut mode = Mode::Auto;
     let mut score = 0;
     let mut speed = Duration::from_millis(100);
 
-    // Game Loop
     while running {
-        // 1. Handle Input (just quitting for now)
-        if event::poll(speed)? {
-            if let Event::Key(KeyEvent { code, .. }) = event::read()? {
-                match code {
-                    KeyCode::Char('q') | KeyCode::Esc => running = false,
-
-                    // Toggle Mode explicitly
-                    KeyCode::Char('a') => mode = Mode::Auto,
-
-                    // Manual Controls -> Switch to Manual Mode automatically
-                    KeyCode::Left => {
-                        mode = Mode::Manual;
-                        snake.set_direction(LEFT);
-                    }
-                    KeyCode::Right => {
-                        mode = Mode::Manual;
-                        snake.set_direction(RIGHT);
-                    }
-                    KeyCode::Up => {
-                        mode = Mode::Manual;
-                        snake.set_direction(UP);
-                    }
-                    KeyCode::Down => {
-                        mode = Mode::Manual;
-                        snake.set_direction(DOWN);
-                    }
-
-                    _ => {}
-                }
-            }
-        }
-
-        // 2. Logic & Update
+        handle_input(&mut mode, &mut snake, &mut running)?;
         if mode == Mode::Auto {
             snake.autopilot(food.x, food.y);
         }
-
-        // Update
         let (term_cols, term_rows) = terminal::size()?;
-
         snake.update(term_cols, term_rows - 1);
 
-        // Check for Death (Self Collision)
         if snake.check_self_collision() {
-            // 1. Flash Screen Red
-            execute!(
-                stdout,
-                SetBackgroundColor(Color::Red), // Set bg to red
-                terminal::Clear(terminal::ClearType::All)  // Fill screen with red
-            )?;
-            stdout.flush()?; // Force display NOW
-
-            // 2. Freeze for 200ms so the player sees the hit
-            std::thread::sleep(Duration::from_millis(200));
-
-            // 3. Reset Colors
-            execute!(
-                stdout,
-                SetBackgroundColor(Color::Reset),
-                terminal::Clear(terminal::ClearType::All)
-            )?;
-
-            // 4. Reset Game State
-            snake.reset();
+            handle_collision(&mut snake, &mut stdout)?;
             score = 0;
             speed = Duration::from_millis(100);
         }
 
-        // 3. Draw
-        // Clear screen
-
-        execute!(stdout, terminal::Clear(terminal::ClearType::All))?;
-
-        // Food Collision & Score Update
-        if let Some(&(head_x, head_y)) = snake.body.front() {
-            if head_x == food.x && head_y == food.y {
-                let (w, h) = terminal::size()?;
-                food.respawn(w, h);
-
-                // Grow
-                if let Some(&tail) = snake.body.back() {
-                    snake.body.push_back(tail);
-                }
-
-                // Increase Score and Speed
-                score += 10;
-                // Decrease sleep time by 2ms, capping at 30ms (super fast)
-                if speed > Duration::from_millis(40) {
-                    speed -= Duration::from_millis(10);
-                }
-            }
+        if let (Some(&(head_x, head_y)), Some(&tail)) = (snake.body.front(), snake.body.back())
+            && head_x == food.x
+            && head_y == food.y
+        {
+            let (w, h) = terminal::size()?;
+            food.respawn(w, h);
+            snake.body.push_back(tail);
+            score += 10;
+            speed = speed
+                .saturating_sub(Duration::from_millis(10))
+                .max(Duration::from_millis(40));
         }
 
-        let mode_text = match mode {
-            Mode::Auto => "AUTO (Press Arrows to Play)",
-            Mode::Manual => "MANUAL (Press 'a' for Auto)",
-        };
-        // Display the mode text at the bottom of the screen
-        execute!(
-            stdout,
-            cursor::MoveTo(0, term_rows - 1), // Bottom row
-            SetForegroundColor(Color::Yellow),
-            Print(mode_text)
-        )?;
-
-        execute!(
-            stdout,
-            cursor::MoveTo(food.x, food.y),
-            SetForegroundColor(Color::Red), // Make food Red or White
-            Print(food.symbol)
-        )?;
-
-        if let Some(&(head_x, head_y)) = snake.body.front() {
-            if head_x == food.x && head_y == food.y {
-                // Respawn food
-                let (w, h) = terminal::size()?;
-                food.respawn(w, h);
-
-                // GROW: To grow, we just skip the `pop_back` we did in update().
-                // But since `update` does pop_back automatically, the easiest way
-                // is to just add a dummy tail segment back, OR change `update` logic.
-                if let Some(&tail) = snake.body.back() {
-                    snake.body.push_back(tail);
-                }
-            }
-        }
-
-        for (i, point) in snake.body.iter().enumerate() {
-            // Head gets the Lambda, body gets a different char
-            let symbol = if i == 0 { "λ" } else { "o" };
-            execute!(
-                stdout,
-                cursor::MoveTo(point.0, point.1),
-                SetForegroundColor(Color::Cyan),
-                Print(symbol)
-            )?;
-
-            // Flush output
-        }
-        // Draw Score and Mode at the bottom
-        let status_text = match mode {
-            Mode::Auto => format!("AUTO | Score: {} | Speed: {}ms", score, speed.as_millis()),
-            Mode::Manual => format!("MANUAL | Score: {} | Speed: {}ms", score, speed.as_millis()),
-        };
-
-        execute!(
-            stdout,
-            cursor::MoveTo(0, term_rows - 1),
-            SetForegroundColor(Color::Yellow),
-            Print(status_text)
-        )?;
-        stdout.flush()?;
+        draw_game(&mut stdout, &snake, &food, &mode, score, speed, term_rows)?;
     }
-    // Cleanup
-    execute!(stdout, cursor::Show, terminal::LeaveAlternateScreen)?;
-    disable_raw_mode()?;
+    restore_terminal()?;
     Ok(())
 }

@@ -1,0 +1,237 @@
+use crossterm::{
+    cursor,
+    event::{self, Event, KeyCode, KeyEvent},
+    execute,
+    style::{Color, Print, SetBackgroundColor, SetForegroundColor},
+    terminal::{self, Clear, ClearType},
+};
+use rand::Rng;
+use std::collections::VecDeque;
+use std::io::{Write, stdout};
+use std::time::Duration;
+
+#[derive(PartialEq, Debug)]
+enum Mode {
+    Auto,
+    Manual,
+}
+
+struct Food {
+    x: u16,
+    y: u16,
+    symbol: char,
+}
+
+impl Food {
+    fn new(width: u16, height: u16) -> Self {
+        let mut rng = rand::rng();
+        Self {
+            x: rng.random_range(0..width),
+            y: rng.random_range(0..height),
+            symbol: if rng.random_bool(0.5) { '❄' } else { '📦' },
+        }
+    }
+
+    fn respawn(&mut self, width: u16, height: u16) {
+        let mut rng = rand::rng();
+        self.x = rng.random_range(0..width);
+        self.y = rng.random_range(0..height.saturating_sub(1));
+        self.symbol = if rng.random_bool(0.5) { '❄' } else { '📦' };
+    }
+}
+
+const RIGHT: (i16, i16) = (1, 0);
+const LEFT: (i16, i16) = (-1, 0);
+const UP: (i16, i16) = (0, -1);
+const DOWN: (i16, i16) = (0, 1);
+
+struct Snake {
+    body: VecDeque<(u16, u16)>,
+    dir: (i16, i16),
+}
+
+impl Snake {
+    fn new() -> Self {
+        let mut body = VecDeque::new();
+        body.push_back((10, 10));
+        body.push_back((9, 10));
+        body.push_back((8, 10));
+        Self { body, dir: RIGHT }
+    }
+
+    fn check_self_collision(&self) -> bool {
+        let (head_x, head_y) = *self.body.front().expect("Snake has no body");
+        self.body
+            .iter()
+            .skip(1)
+            .any(|&(x, y)| x == head_x && y == head_y)
+    }
+
+    fn reset(&mut self) {
+        self.body.clear();
+        self.body.push_back((10, 10));
+        self.body.push_back((9, 10));
+        self.body.push_back((8, 10));
+        self.dir = RIGHT;
+    }
+
+    fn update(&mut self, max_width: u16, max_height: u16) {
+        let (head_x, head_y) = *self.body.front().expect("Snake has no body");
+        let width = max_width as i16;
+        let height = max_height as i16;
+
+        let next_x = (head_x as i16 + self.dir.0).rem_euclidean(width);
+        let next_y = (head_y as i16 + self.dir.1).rem_euclidean(height);
+
+        self.body.push_front((next_x as u16, next_y as u16));
+        self.body.pop_back();
+    }
+
+    fn set_direction(&mut self, new_dir: (i16, i16)) {
+        if (self.dir.0 + new_dir.0 != 0) || (self.dir.1 + new_dir.1 != 0) {
+            self.dir = new_dir;
+        }
+    }
+
+    fn autopilot(&mut self, food_x: u16, food_y: u16) {
+        let (head_x, head_y) = *self.body.front().unwrap();
+        if head_x < food_x && self.dir != LEFT {
+            self.set_direction(RIGHT);
+        } else if head_x > food_x && self.dir != RIGHT {
+            self.set_direction(LEFT);
+        } else if head_y < food_y && self.dir != UP {
+            self.set_direction(DOWN);
+        } else if head_y > food_y && self.dir != DOWN {
+            self.set_direction(UP);
+        }
+    }
+}
+
+fn setup_terminal() -> std::io::Result<()> {
+    terminal::enable_raw_mode()?;
+    execute!(stdout(), terminal::EnterAlternateScreen, cursor::Hide)?;
+    Ok(())
+}
+
+fn restore_terminal() -> std::io::Result<()> {
+    execute!(stdout(), terminal::LeaveAlternateScreen, cursor::Show)?;
+    terminal::disable_raw_mode()?;
+    Ok(())
+}
+
+fn handle_death(snake: &mut Snake, score: &mut i32, speed: &mut Duration) -> std::io::Result<()> {
+    execute!(
+        stdout(),
+        SetBackgroundColor(Color::Red),
+        Clear(ClearType::All)
+    )?;
+    stdout().flush()?;
+    std::thread::sleep(Duration::from_millis(200));
+    execute!(
+        stdout(),
+        SetBackgroundColor(Color::Reset),
+        Clear(ClearType::All)
+    )?;
+    snake.reset();
+    *score = 0;
+    *speed = Duration::from_millis(100);
+    Ok(())
+}
+
+fn main() -> std::io::Result<()> {
+    setup_terminal()?;
+    let mut snake = Snake::new();
+    let mut running = true;
+    let (mut w, mut h) = terminal::size()?;
+    let mut food = Food::new(w, h);
+    let mut mode = Mode::Auto;
+    let mut score = 0;
+    let mut speed = Duration::from_millis(100);
+
+    while running {
+        if event::poll(speed)? {
+            if let Event::Key(KeyEvent { code, .. }) = event::read()? {
+                match code {
+                    KeyCode::Char('q') | KeyCode::Esc => running = false,
+                    KeyCode::Char('a') => mode = Mode::Auto,
+                    KeyCode::Left => {
+                        mode = Mode::Manual;
+                        snake.set_direction(LEFT);
+                    }
+                    KeyCode::Right => {
+                        mode = Mode::Manual;
+                        snake.set_direction(RIGHT);
+                    }
+                    KeyCode::Up => {
+                        mode = Mode::Manual;
+                        snake.set_direction(UP);
+                    }
+                    KeyCode::Down => {
+                        mode = Mode::Manual;
+                        snake.set_direction(DOWN);
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        if mode == Mode::Auto {
+            snake.autopilot(food.x, food.y);
+        }
+
+        let (cols, rows) = terminal::size()?;
+        (w, h) = (cols, rows);
+        snake.update(w, h - 1);
+
+        if snake.check_self_collision() {
+            handle_death(&mut snake, &mut score, &mut speed)?;
+        }
+
+        if let Some(&(hx, hy)) = snake.body.front() {
+            if hx == food.x && hy == food.y {
+                food.respawn(w, h - 1);
+                if let Some(&tail) = snake.body.back() {
+                    snake.body.push_back(tail);
+                }
+                score += 10;
+                speed = speed
+                    .saturating_sub(Duration::from_millis(5))
+                    .max(Duration::from_millis(40));
+            }
+        }
+
+        execute!(stdout(), Clear(ClearType::All))?;
+        execute!(
+            stdout(),
+            cursor::MoveTo(food.x, food.y),
+            SetForegroundColor(Color::Red),
+            Print(food.symbol)
+        )?;
+
+        for (i, p) in snake.body.iter().enumerate() {
+            let sym = if i == 0 { "λ" } else { "o" };
+            execute!(
+                stdout(),
+                cursor::MoveTo(p.0, p.1),
+                SetForegroundColor(Color::Cyan),
+                Print(sym)
+            )?;
+        }
+
+        let ui = format!(
+            "{:?} | Score: {} | Speed: {}ms",
+            mode,
+            score,
+            speed.as_millis()
+        );
+        execute!(
+            stdout(),
+            cursor::MoveTo(0, h - 1),
+            SetForegroundColor(Color::Yellow),
+            Print(ui)
+        )?;
+        stdout().flush()?;
+    }
+
+    restore_terminal()
+}
