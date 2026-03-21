@@ -279,9 +279,10 @@ fn main() -> std::io::Result<()> {
             score += 10;
 
             // 5% increase (divide by 20)
-            let reduction = speed.as_millis() / 20;
+            let reduction =
+                u64::try_from(speed.as_millis() / 20).expect("speed reduction fits in u64"); // Safe: value is tiny
             speed = speed
-                .saturating_sub(Duration::from_millis(reduction as u64))
+                .saturating_sub(Duration::from_millis(reduction))
                 .max(Duration::from_millis(25));
         }
 
