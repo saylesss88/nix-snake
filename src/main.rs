@@ -5,7 +5,7 @@ use crossterm::{
     style::{Color, Print, SetBackgroundColor, SetForegroundColor},
     terminal::{self},
 };
-use rand::Rng;
+use rand::RngExt;
 use std::collections::VecDeque;
 use std::io::{Write, stdout};
 use std::time::Duration;
