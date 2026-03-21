@@ -146,7 +146,7 @@ fn restore_terminal() -> std::io::Result<()> {
 }
 
 fn handle_input(mode: &mut Mode, snake: &mut Snake, running: &mut bool) -> std::io::Result<()> {
-    if event::poll(Duration::from_millis(100))?
+    if event::poll(Duration::from_millis(0))?
         && let Event::Key(KeyEvent { code, .. }) = event::read()?
     {
         match code {
@@ -269,20 +269,25 @@ fn main() -> std::io::Result<()> {
             speed = Duration::from_millis(100);
         }
 
-        if let (Some(&(head_x, head_y)), Some(&tail)) = (snake.body.front(), snake.body.back())
-            && head_x == food.x
-            && head_y == food.y
+        if let (Some(&(hx, hy)), Some(&tail)) = (snake.body.front(), snake.body.back())
+            && hx == food.x
+            && hy == food.y
         {
             let (w, h) = terminal::size()?;
             food.respawn(w, h);
             snake.body.push_back(tail);
             score += 10;
+
+            // 5% increase (divide by 20)
+            let reduction = speed.as_millis() / 20;
             speed = speed
-                .saturating_sub(Duration::from_millis(10))
-                .max(Duration::from_millis(40));
+                .saturating_sub(Duration::from_millis(reduction as u64))
+                .max(Duration::from_millis(25));
         }
 
         draw_game(&mut stdout, &snake, &food, &mode, score, speed, term_rows)?;
+
+        std::thread::sleep(speed);
     }
     restore_terminal()?;
     Ok(())
