@@ -1,38 +1,38 @@
+// commit 09 — refactor: extract functions + panic hook
+// Goal: main() reads like a script. Add panic safety.
+// No new features — pure reorganization + one important bug fix.
+
 use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEvent},
-    execute,
+    execute, queue,
     style::{Color, Print, SetBackgroundColor, SetForegroundColor},
-    terminal::{self},
+    terminal,
 };
 use rand::RngExt;
 use std::collections::VecDeque;
 use std::io::{Write, stdout};
 use std::time::Duration;
 
+type Direction = (i16, i16);
+pub const RIGHT: Direction = (1, 0);
+pub const LEFT:  Direction = (-1, 0);
+pub const UP:    Direction = (0, -1);
+pub const DOWN:  Direction = (0, 1);
+
 #[derive(PartialEq)]
-enum Mode {
-    Auto,
-    Manual,
-}
+enum Mode { Auto, Manual }
 
-struct Food {
-    x: u16,
-    y: u16,
-    symbol: char, // '❄' or '📦'
-}
-
+struct Food { x: u16, y: u16, symbol: char }
 impl Food {
-    // We need to know screen size to spawn randomly
     fn new(width: u16, height: u16) -> Self {
         let mut rng = rand::rng();
         Self {
             x: rng.random_range(0..width),
-            y: rng.random_range(0..height),
+            y: rng.random_range(0..height.saturating_sub(1)),
             symbol: if rng.random_bool(0.5) { '❄' } else { '📦' },
         }
     }
-
     fn respawn(&mut self, width: u16, height: u16) {
         let mut rng = rand::rng();
         self.x = rng.random_range(0..width);
@@ -41,107 +41,51 @@ impl Food {
     }
 }
 
-// direction constants
-const RIGHT: (i16, i16) = (1, 0);
-const LEFT: (i16, i16) = (-1, 0);
-const UP: (i16, i16) = (0, -1);
-const DOWN: (i16, i16) = (0, 1);
-
-struct Snake {
-    // body holds all segments. body[0] is the head.
-    body: VecDeque<(u16, u16)>,
-    dir: (i16, i16),
-}
-
+struct Snake { body: VecDeque<(u16, u16)>, dir: Direction }
 impl Snake {
     fn new() -> Self {
         let mut body = VecDeque::new();
-        body.push_back((10, 10)); // Head
-        body.push_back((9, 10)); // Tail segment 1
-        body.push_back((8, 10)); // Tail segment 2 (start with length 3)
-        Self {
-            body,
-            dir: RIGHT, // Start moving right
-        }
+        body.push_back((10, 10)); body.push_back((9, 10)); body.push_back((8, 10));
+        Self { body, dir: RIGHT }
     }
-
-    fn check_self_collision(&self) -> bool {
-        let (head_x, head_y) = *self.body.front().expect("Snake has no body");
-        // Skip the first element (the head) and check the rest
-        self.body
-            .iter()
-            .skip(1)
-            .any(|&(x, y)| x == head_x && y == head_y)
-    }
-
-    // Helper to reset snake on death
     fn reset(&mut self) {
         self.body.clear();
-        self.body.push_back((10, 10));
-        self.body.push_back((9, 10));
-        self.body.push_back((8, 10));
+        self.body.push_back((10, 10)); self.body.push_back((9, 10)); self.body.push_back((8, 10));
         self.dir = RIGHT;
     }
-
     fn update(&mut self, max_width: u16, max_height: u16) {
-        let (head_x, head_y) = *self.body.front().expect("Snake has no body");
-
-        // Use i32::from() for lossless conversion from u16/i16 to i32
-        let next_x = (i32::from(head_x) + i32::from(self.dir.0)).rem_euclid(i32::from(max_width));
-
-        let next_y = (i32::from(head_y) + i32::from(self.dir.1)).rem_euclid(i32::from(max_height));
-
-        // We still use 'as u16' at the very end to put it back in the deque
-
+        let (hx, hy) = *self.body.front().expect("snake has no body");
+        let nx = (i32::from(hx)+i32::from(self.dir.0)).rem_euclid(i32::from(max_width));
+        let ny = (i32::from(hy)+i32::from(self.dir.1)).rem_euclid(i32::from(max_height));
         #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
-        self.body.push_front((next_x as u16, next_y as u16));
+        self.body.push_front((nx as u16, ny as u16));
         self.body.pop_back();
     }
-
-    const fn set_direction(&mut self, new_dir: (i16, i16)) {
-        // Prevent 180 turns (banning reversing)
-        // If current is RIGHT (1,0) and new is LEFT (-1,0), sum is (0,0).
-        // This simple check works for opposite cardinal directions.
-        if (self.dir.0 + new_dir.0 != 0) || (self.dir.1 + new_dir.1 != 0) {
-            self.dir = new_dir;
-        }
+    const fn set_direction(&mut self, new_dir: Direction) {
+        if (self.dir.0+new_dir.0 != 0) || (self.dir.1+new_dir.1 != 0) { self.dir = new_dir; }
     }
-
-    // The AI Logic
+    fn check_self_collision(&self) -> bool {
+        let (hx, hy) = *self.body.front().expect("snake has no body");
+        self.body.iter().skip(1).any(|&(x, y)| x == hx && y == hy)
+    }
     fn autopilot(&mut self, food_x: u16, food_y: u16) {
-        let (head_x, head_y) = *self.body.front().unwrap();
-
-        // Determine ideal direction
-        // Prioritize X movement first (arbitrary choice)
-        if head_x < food_x && self.dir != LEFT {
-            self.set_direction(RIGHT);
-        } else if head_x > food_x && self.dir != RIGHT {
-            self.set_direction(LEFT);
-        } else if head_y < food_y && self.dir != UP {
-            self.set_direction(DOWN);
-        } else if head_y > food_y && self.dir != DOWN {
-            self.set_direction(UP);
-        }
-        // Else: keep going current direction (or pick random safe turn if stuck)
+        let (hx, hy) = *self.body.front().expect("snake has no body");
+        if hx < food_x && self.dir != LEFT       { self.set_direction(RIGHT); }
+        else if hx > food_x && self.dir != RIGHT { self.set_direction(LEFT); }
+        else if hy < food_y && self.dir != UP    { self.set_direction(DOWN); }
+        else if hy > food_y && self.dir != DOWN  { self.set_direction(UP); }
     }
 }
+
 fn setup_terminal() -> std::io::Result<()> {
-    crossterm::terminal::enable_raw_mode()?;
-    crossterm::execute!(
-        std::io::stdout(),
-        crossterm::terminal::EnterAlternateScreen,
-        crossterm::cursor::Hide
-    )?;
+    terminal::enable_raw_mode()?;
+    execute!(stdout(), terminal::EnterAlternateScreen, cursor::Hide)?;
     Ok(())
 }
 
 fn restore_terminal() -> std::io::Result<()> {
-    crossterm::execute!(
-        std::io::stdout(),
-        crossterm::terminal::LeaveAlternateScreen,
-        crossterm::cursor::Show
-    )?;
-    crossterm::terminal::disable_raw_mode()?;
+    execute!(stdout(), terminal::LeaveAlternateScreen, cursor::Show)?;
+    terminal::disable_raw_mode()?;
     Ok(())
 }
 
@@ -152,47 +96,27 @@ fn handle_input(mode: &mut Mode, snake: &mut Snake, running: &mut bool) -> std::
         match code {
             KeyCode::Char('q') | KeyCode::Esc => *running = false,
             KeyCode::Char('a') => *mode = Mode::Auto,
-            KeyCode::Left => {
-                *mode = Mode::Manual;
-                snake.set_direction(LEFT);
-            }
-            KeyCode::Right => {
-                *mode = Mode::Manual;
-                snake.set_direction(RIGHT);
-            }
-            KeyCode::Up => {
-                *mode = Mode::Manual;
-                snake.set_direction(UP);
-            }
-            KeyCode::Down => {
-                *mode = Mode::Manual;
-                snake.set_direction(DOWN);
-            }
+            KeyCode::Left  => { *mode = Mode::Manual; snake.set_direction(LEFT);  }
+            KeyCode::Right => { *mode = Mode::Manual; snake.set_direction(RIGHT); }
+            KeyCode::Up    => { *mode = Mode::Manual; snake.set_direction(UP);    }
+            KeyCode::Down  => { *mode = Mode::Manual; snake.set_direction(DOWN);  }
             _ => {}
         }
     }
     Ok(())
 }
 
-fn handle_collision(snake: &mut Snake, stdout: &mut std::io::Stdout) -> std::io::Result<()> {
-    execute!(
-        stdout,
-        SetBackgroundColor(Color::Red),
-        terminal::Clear(terminal::ClearType::All)
-    )?;
-    stdout.flush()?;
+fn handle_collision(snake: &mut Snake, out: &mut std::io::Stdout) -> std::io::Result<()> {
+    execute!(out, SetBackgroundColor(Color::Red), terminal::Clear(terminal::ClearType::All))?;
+    out.flush()?;
     std::thread::sleep(Duration::from_millis(200));
-    execute!(
-        stdout,
-        SetBackgroundColor(Color::Reset),
-        terminal::Clear(terminal::ClearType::All)
-    )?;
+    execute!(out, SetBackgroundColor(Color::Reset), terminal::Clear(terminal::ClearType::All))?;
     snake.reset();
     Ok(())
 }
 
 fn draw_game(
-    stdout: &mut std::io::Stdout,
+    out: &mut std::io::Stdout,
     snake: &Snake,
     food: &Food,
     mode: &Mode,
@@ -200,96 +124,70 @@ fn draw_game(
     speed: Duration,
     term_rows: u16,
 ) -> std::io::Result<()> {
-    execute!(stdout, terminal::Clear(terminal::ClearType::All))?;
-
-    let mode_text = match mode {
-        Mode::Auto => "AUTO (Press Arrows to Play)",
-        Mode::Manual => "MANUAL (Press 'a' for Auto)",
-    };
-    execute!(
-        stdout,
-        cursor::MoveTo(0, term_rows - 1),
-        SetForegroundColor(Color::Yellow),
-        Print(mode_text)
-    )?;
-
-    execute!(
-        stdout,
-        cursor::MoveTo(food.x, food.y),
-        SetForegroundColor(Color::Red),
-        Print(food.symbol)
-    )?;
-
-    for (i, point) in snake.body.iter().enumerate() {
-        let symbol = if i == 0 { "λ" } else { "o" };
-        execute!(
-            stdout,
-            cursor::MoveTo(point.0, point.1),
-            SetForegroundColor(Color::Cyan),
-            Print(symbol)
-        )?;
+    queue!(out, terminal::Clear(terminal::ClearType::All))?;
+    queue!(out, cursor::MoveTo(food.x, food.y), SetForegroundColor(Color::Red), Print(food.symbol))?;
+    for (i, &(x, y)) in snake.body.iter().enumerate() {
+        let ch = if i == 0 { "λ" } else { "o" };
+        queue!(out, cursor::MoveTo(x, y), SetForegroundColor(Color::Cyan), Print(ch))?;
     }
-
-    let status_text = match mode {
-        Mode::Auto => format!("AUTO | Score: {} | Speed: {}ms", score, speed.as_millis()),
-        Mode::Manual => format!("MANUAL | Score: {} | Speed: {}ms", score, speed.as_millis()),
-    };
-    execute!(
-        stdout,
-        cursor::MoveTo(0, term_rows - 1),
-        SetForegroundColor(Color::Yellow),
-        Print(status_text)
-    )?;
-    stdout.flush()?;
+    let mode_label = if *mode == Mode::Auto { "AUTO (arrows to play)" } else { "MANUAL (a for auto)" };
+    let status = format!("{} | Score: {} | Speed: {}ms", mode_label, score, speed.as_millis());
+    queue!(out, cursor::MoveTo(0, term_rows-1), SetForegroundColor(Color::Yellow), Print(status))?;
+    out.flush()?;
     Ok(())
 }
 
 fn main() -> std::io::Result<()> {
     setup_terminal()?;
-    let mut stdout = stdout();
+
+    // Panic hook: restore terminal even if something panics.
+    // Without this, a panic in raw mode leaves the shell broken.
+    let original_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let _ = restore_terminal();
+        original_hook(info);
+    }));
+
+    let mut out = stdout();
     let mut snake = Snake::new();
     let mut running = true;
     let (w, h) = terminal::size()?;
     let mut food = Food::new(w, h);
     let mut mode = Mode::Auto;
-    let mut score = 0;
+    let mut score: u32 = 0;
     let mut speed = Duration::from_millis(100);
 
     while running {
         handle_input(&mut mode, &mut snake, &mut running)?;
+
         if mode == Mode::Auto {
             snake.autopilot(food.x, food.y);
         }
+
         let (term_cols, term_rows) = terminal::size()?;
         snake.update(term_cols, term_rows - 1);
 
         if snake.check_self_collision() {
-            handle_collision(&mut snake, &mut stdout)?;
+            handle_collision(&mut snake, &mut out)?;
             score = 0;
             speed = Duration::from_millis(100);
         }
 
-        if let (Some(&(hx, hy)), Some(&tail)) = (snake.body.front(), snake.body.back())
-            && hx == food.x
-            && hy == food.y
+        if let Some(&(hx, hy)) = snake.body.front()
+            && hx == food.x && hy == food.y
         {
             let (w, h) = terminal::size()?;
             food.respawn(w, h);
-            snake.body.push_back(tail);
+            if let Some(&tail) = snake.body.back() { snake.body.push_back(tail); }
             score += 10;
-
-            // 5% increase (divide by 20)
-            let reduction =
-                u64::try_from(speed.as_millis() / 20).expect("speed reduction fits in u64"); // Safe: value is tiny
-            speed = speed
-                .saturating_sub(Duration::from_millis(reduction))
-                .max(Duration::from_millis(25));
+            let reduction = u64::try_from(speed.as_millis() / 20).expect("fits in u64");
+            speed = speed.saturating_sub(Duration::from_millis(reduction)).max(Duration::from_millis(25));
         }
 
-        draw_game(&mut stdout, &snake, &food, &mode, score, speed, term_rows)?;
-
+        draw_game(&mut out, &snake, &food, &mode, score, speed, term_rows)?;
         std::thread::sleep(speed);
     }
+
     restore_terminal()?;
     Ok(())
 }

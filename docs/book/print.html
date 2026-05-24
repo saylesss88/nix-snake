@@ -1,0 +1,635 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>nix-snake-learn</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-7a8f0948.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-062d36b3.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">nix-snake-learn</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="commit-01--feat-draw-λ-on-alternate-screen"><a class="header" href="#commit-01--feat-draw-λ-on-alternate-screen">Commit 01 — <code>feat: draw λ on alternate screen</code></a></h1>
+<p>I will use Jujutsu VCS for this, it’s describe the change
+before you make it works well for learning resources.</p>
+<p>Describe the change we’re going to make:</p>
+<pre><code>jj desc -m "feat: draw λ on alternate screen"
+</code></pre>
+<p><code>cargo run</code> → you see a cyan λ for 2 seconds, then your terminal is restored.</p>
+<h2 id="initialize-the-project"><a class="header" href="#initialize-the-project">Initialize the Project</a></h2>
+<pre><code class="language-sh">cargo new nix-snake
+cargo add crossterm rand
+</code></pre>
+<ul>
+<li>If you want to practice conventional commits, make
+<code>feat: draw λ on alternate screen</code> your second commit with your first being
+something like <code>chore: initialize project with dependencies</code>.</li>
+</ul>
+<h2 id="whats-happening"><a class="header" href="#whats-happening">What’s happening</a></h2>
+<p><strong>Raw mode</strong> disables the terminal’s normal line-buffering and echo. Without it,
+keypresses sit in a buffer until you hit Enter, and every character you type
+appears on screen. A game needs neither.</p>
+<p><strong>Alternate screen</strong> is like a second framebuffer. Your game runs on a clean
+slate; when you leave (<code>LeaveAlternateScreen</code>), the user’s previous terminal
+content comes back exactly as it was. Without it, your output scrolls into their
+shell history.</p>
+<p><strong><code>cursor::Hide</code></strong> removes the blinking cursor so it doesn’t sit on top of your
+λ.</p>
+<h2 id="execute"><a class="header" href="#execute"><code>execute!</code></a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>execute!(stdout(), Command1, Command2, Command3)?;
+<span class="boring">}</span></code></pre>
+<p>Writes <code>crossterm</code> commands to the given writer and flushes immediately. Each
+command translates to an ANSI escape sequence — bytes sent to the terminal that
+tell it “move cursor here”, “set this color”, etc.</p>
+<ul>
+<li>To better understand <strong>Canonical Mode vs Raw Mode</strong>, I suggest reading
+<a href="https://philippflenker.com/hecto-chapter-2/">hecto-chapter-2</a></li>
+</ul>
+<h2 id="the--operator"><a class="header" href="#the--operator">The <code>?</code> operator</a></h2>
+<p>Every fallible function returns <code>std::io::Result&lt;T&gt;</code>. The <code>?</code> at the end means:
+if this returned <code>Err</code>, return that error from the current function immediately.
+In <code>main()</code> returning <code>std::io::Result&lt;()&gt;</code>, errors are printed and the process
+exits non-zero.</p>
+<h2 id="why-stdout-every-time-and-not-a-variable"><a class="header" href="#why-stdout-every-time-and-not-a-variable">Why <code>stdout()</code> every time and not a variable?</a></h2>
+<p>You’ll notice we call <code>stdout()</code> multiple times. Next commit we’ll fix this:
+call it once, store it in <code>let mut out = stdout()</code>, reuse it. For now, keep it
+simple.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="commit-02--feat-game-loop-λ-crawls-right"><a class="header" href="#commit-02--feat-game-loop-λ-crawls-right">Commit 02 — <code>feat: game loop, λ crawls right</code></a></h1>
+<pre><code>jj desc -m "feat: game loop, λ crawls right"
+</code></pre>
+<p><code>cargo run</code> → λ slides across row 10 and the program exits.</p>
+<h2 id="the-game-loop-pattern"><a class="header" href="#the-game-loop-pattern">The game loop pattern</a></h2>
+<pre><code>loop:
+  clear screen
+  update state
+  draw state
+  sleep
+</code></pre>
+<p>Every game loop in existence is a variation of this. The order matters:
+clear <em>before</em> drawing so you’re never reading stale state.</p>
+<h2 id="outflush"><a class="header" href="#outflush"><code>out.flush()</code></a></h2>
+<p><code>execute!</code> writes to an internal buffer. <code>flush()</code> forces that buffer
+out to the actual terminal. Without it, you might see nothing, or worse,
+see it all at once when the buffer fills. Call it once per frame, at the
+end of drawing.</p>
+<h2 id="why-u16-for-position"><a class="header" href="#why-u16-for-position">Why <code>u16</code> for position?</a></h2>
+<p>Crossterm’s <code>cursor::MoveTo(col, row)</code> takes <code>u16</code>. Terminal dimensions
+are reported as <code>u16</code>. Using the same type for position avoids casts
+at every draw call. You’ll see why this matters when we add direction.
+(Direction needs negative numbers, so it gets a different type).</p>
+<h2 id="what-you-should-notice"><a class="header" href="#what-you-should-notice">What you should notice</a></h2>
+<p>The λ leaves no trail. The <code>Clear</code> on each frame erases the previous
+position. Try commenting out the <code>Clear</code> line and running again. You’ll
+see why it’s there.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="commit-03--feat-wrapping-movement-with-direction-type"><a class="header" href="#commit-03--feat-wrapping-movement-with-direction-type">Commit 03 — <code>feat: wrapping movement with Direction type</code></a></h1>
+<pre><code>jj desc -m "feat: wrapping movement with Direction type"
+</code></pre>
+<p><code>cargo run</code> → λ wraps around screen edges indefinitely.</p>
+<h2 id="the-type-conversion-chain"><a class="header" href="#the-type-conversion-chain">The type conversion chain</a></h2>
+<pre><code>u16 ──i32::from()──▶ i32 ──rem_euclid()──▶ i32 ──as u16──▶ u16
+i16 ──i32::from()──▶ i32
+</code></pre>
+<p><code>i32::from(u16)</code> and <code>i32::from(i16)</code> are <strong>lossless</strong>. The compiler
+only allows <code>From</code> impls that can never lose data. If you tried
+<code>i32::from(u64)</code> it wouldn’t compile, because u64 doesn’t fit in i32.</p>
+<p><code>as u16</code> at the end <strong>is</strong> a truncating cast. (it can silently drop bits).
+We allow it only because <code>rem_euclid(width)</code> guarantees the result is
+in <code>[0, width)</code>, which fits in u16. The <code>#[allow(clippy::...)]</code> is
+documenting “I verified this is safe.”</p>
+<h2 id="terminalsize"><a class="header" href="#terminalsize"><code>terminal::size()</code></a></h2>
+<p>Returns <code>(columns, rows)</code> as <code>(u16, u16)</code>. Called once at startup here.
+Later we’ll call it every frame to handle terminal resize.</p>
+<h2 id="the-loop-with-no-exit"><a class="header" href="#the-loop-with-no-exit">The <code>loop</code> with no exit</a></h2>
+<p>This loop runs forever. (you kill it with Ctrl+C). That leaves the
+terminal in raw mode (broken). Next commit we’ll add proper input
+handling with a clean exit. For now: if your terminal gets stuck,
+run <code>reset</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="commit-04--feat-keyboard-steering-and-clean-exit"><a class="header" href="#commit-04--feat-keyboard-steering-and-clean-exit">Commit 04 — <code>feat: keyboard steering and clean exit</code></a></h1>
+<pre><code>jj desc -m "feat: keyboard steering and clean exit"
+</code></pre>
+<p><code>cargo run</code> → steer with arrow keys, <code>q</code> exits cleanly.</p>
+<h2 id="non-blocking-input-poll-before-read"><a class="header" href="#non-blocking-input-poll-before-read">Non-blocking input: <code>poll</code> before <code>read</code></a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>if event::poll(Duration::from_millis(0))? &amp;&amp; let Event::Key(...) = event::read()? {
+<span class="boring">}</span></code></pre>
+<p><code>event::read()</code> <strong>blocks</strong> — it sits and waits for a keypress.
+<code>event::poll(0ms)</code> <strong>does not block</strong> — it checks and returns immediately.</p>
+<p>The pattern: poll first, only read if something is waiting.
+If nothing is queued, skip input entirely and keep the game running.</p>
+<h2 id="let-chains"><a class="header" href="#let-chains">Let chains</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>if event::poll(...)? &amp;&amp; let Event::Key(KeyEvent { code, .. }) = event::read()? {
+<span class="boring">}</span></code></pre>
+<p>Two conditions AND’d together. The second uses <code>let</code> to simultaneously
+check the type AND destructure it. If the event is a Resize event
+instead of a Key event, the <code>let</code> pattern fails and the block is skipped.
+Stable since Rust 1.64.</p>
+<h2 id="_---in-match"><a class="header" href="#_---in-match"><code>_ =&gt; {}</code> in match</a></h2>
+<p>Rust’s <code>match</code> is exhaustive — you must handle every possible value.
+<code>KeyCode</code> has dozens of variants (F-keys, home, end, etc.).
+<code>_ =&gt; {}</code> means “do nothing for everything I didn’t list.”</p>
+<h2 id="up--0--1"><a class="header" href="#up--0--1">UP = (0, -1)</a></h2>
+<p>Terminal coordinate system: <code>(0,0)</code> is top-left. Y increases <em>downward</em>.
+Moving up on screen = row number decreasing = delta of -1.
+This is the most common source of confusion in terminal graphics.</p>
+<h2 id="clean-exit-matters"><a class="header" href="#clean-exit-matters">Clean exit matters</a></h2>
+<p>Previous commits used <code>loop {}</code> with no exit, leaving the terminal in
+raw mode on Ctrl+C. Now <code>q</code> properly calls <code>disable_raw_mode()</code> and
+<code>LeaveAlternateScreen</code> before exiting. Your shell is intact.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="commit-05--feat-snake-struct-with-vecdeque-body"><a class="header" href="#commit-05--feat-snake-struct-with-vecdeque-body">Commit 05 — <code>feat: Snake struct with VecDeque body</code></a></h1>
+<pre><code>jj desc -m "feat: Snake struct with VecDeque body"
+</code></pre>
+<p><code>cargo run</code> → steerable snake with a 3-segment tail, dies on self-collision.</p>
+<h2 id="why-vecdeque"><a class="header" href="#why-vecdeque">Why VecDeque?</a></h2>
+<p>It always helps me to actually see what I’m working with. Here’s an example of a <code>VecDeque&lt;(u16, u16)&gt;</code>:</p>
+<pre><code class="language-rs">use std::collections::VecDeque;
+
+let body = VecDeque::from(vec![(1, 2), (3, 6), (5, 8)]);
+</code></pre>
+<p>If this represents a character or snake moving across a 2D grid, you can visualize those three elements living in your
+queue like this:</p>
+<pre><code class="language-text">FRONT (Head)                     BACK (Tail)
+          ┌──────────────┬──────────────┬──────────────┐
+Index:    │      0       │      1       │      2       │
+          ├──────────────┼──────────────┼──────────────┤
+Value:    │    (1, 2)    │    (3, 6)    │    (5, 8)    │
+          └──────┬───────┴──────┬───────┴──────┬───────┘
+                 │              │              │
+                 ▼              ▼              ▼
+            Grid: X=1,Y=2  Grid: X=3,Y=6  Grid: X=5,Y=8
+</code></pre>
+<p>When the character moves forward, you’ll just do <code>body.push_front((new_x, new_y))</code> to grow the head, and <code>body.pop_back()</code> to drop the trailing piece of the tail.</p>
+<p>If you remember from The Rust Programming Language Book, the
+standard stack is (First-In, Last-Out). You pile plates on top,
+and you have to take the top plate off first. You can’t safely
+grab a plate from the bottom without a massive disaster.</p>
+<p>A <code>VecDeque</code> breaks that rule completely. It’s a Double-Ended
+Queue.</p>
+<p>Instead of a stack of plates on a table, imagine a sleeve of
+plastic cups in a dispenser at a water cooler:</p>
+<ul>
+<li>You can load a cup into the top, or load a cup into the bottom.</li>
+<li>You can pull a cup out of the top, or pull a cup out of the bottom.</li>
+</ul>
+<p>This is also just an analogy. Because a snake can grow to 5
+segments, 50 segments, etc depending on how good you are at
+the game, its size is <strong>dynamic</strong>. In Rust, anything that
+changes size dynamically must go on the heap.</p>
+<p>Think of a <code>VecDeque</code> (short for Vector Double-Ended Queue, pronounced “deck”) as a standard <code>Vec</code>, but with a superpower:
+it lets you add or remove items from the <strong>front</strong> just as
+fast as you can from the <strong>back</strong>.</p>
+<p><strong>The Problem it Solves</strong></p>
+<p>If you have a normal <code>Vec</code> and use <code>push</code> or <code>pop</code>, it’s incredibly fast because Rust is just messing with the very end of the array. But if you try to use <code>vec.insert(0, item)</code> or <code>vec.remove(0)</code>, Rust has to manually shift every single other item in memory one slot to the right or left. If your <code>Vec</code> has 10,000 items, that is incredibly slow.</p>
+<p>A <code>VecDeque</code> solves this. It gives you 4 core operations that all run in $O(1)$ time (nearly instantaneous, no matter how big it grows):</p>
+<ul>
+<li><code>push_back</code> / <code>pop_back</code> (Just like a normal <code>Vec</code>)</li>
+<li><code>push_front</code> / <code>pop_front</code> (Super fast addition/removal at the start).</li>
+</ul>
+<p>Snake movement every frame:</p>
+<ol>
+<li>Add new head position at the <strong>front</strong></li>
+<li>Remove old tail position from the <strong>back</strong></li>
+</ol>
+<p>With <code>Vec</code>, inserting at position 0 is O(n) — every element shifts right.
+With <code>VecDeque</code> (a ring buffer), both ends are O(1) amortized.</p>
+<p>For a 3-segment snake this doesn’t matter. For a snake that fills the
+screen it does. More importantly, <code>VecDeque</code> makes the intent clear:
+this is a double-ended queue, not a random-access array.</p>
+<h2 id="the-move--grow-trick"><a class="header" href="#the-move--grow-trick">The move + grow trick</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>self.body.push_front(new_head); // add head
+self.body.pop_back();           // drop tail → net length: same
+<span class="boring">}</span></code></pre>
+<p>When the snake eats food, we skip <code>pop_back()</code>. The deque grows by 1.
+That’s the entire grow mechanic. No special “growing” state needed.</p>
+<h2 id="set_direction--blocking-reversal"><a class="header" href="#set_direction--blocking-reversal"><code>set_direction</code> — blocking reversal</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>if (self.dir.0 + new_dir.0 != 0) || (self.dir.1 + new_dir.1 != 0) {
+<span class="boring">}</span></code></pre>
+<p>Opposite directions sum to (0, 0). This single check catches all four
+cases (RIGHT↔LEFT, UP↔DOWN) without listing them explicitly.</p>
+<h2 id="const-fn"><a class="header" href="#const-fn"><code>const fn</code></a></h2>
+<p><code>set_direction</code> is marked <code>const fn</code> — it can be evaluated at compile
+time. The compiler enforces this: the function body can only contain
+operations valid at compile time. It’s a way of saying “this function
+has no heap allocations, no I/O, no runtime surprises.”</p>
+<h2 id="expect-vs-unwrap"><a class="header" href="#expect-vs-unwrap"><code>expect</code> vs <code>unwrap</code></a></h2>
+<p>Both panic if the <code>Option</code> is <code>None</code>. <code>expect("message")</code> prints your
+message in the panic output. <code>unwrap()</code> prints “called unwrap on None.”
+Always use <code>expect</code> — it tells you <em>what</em> was None when it matters most.</p>
+<h2 id="iterskip1any"><a class="header" href="#iterskip1any"><code>.iter().skip(1).any()</code></a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>self.body.iter().skip(1).any(|&amp;(x, y)| x == hx &amp;&amp; y == hy)
+<span class="boring">}</span></code></pre>
+<p>Iterator chain: iterate all segments, skip the head (index 0),
+check if any remaining segment matches the head position.
+<code>any()</code> short-circuits on first match. The <code>|&amp;(x, y)|</code> destructures
+the reference that <code>iter()</code> yields — <code>&amp;</code> dereferences, <code>(x, y)</code> unpacks.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="commit-06--feat-food-spawning-and-eating"><a class="header" href="#commit-06--feat-food-spawning-and-eating">Commit 06 — <code>feat: food spawning and eating</code></a></h1>
+<pre><code>jj desc -m "feat: food spawning and eating"
+</code></pre>
+<p><code>cargo run</code> → fully playable snake. Score displayed at bottom.</p>
+<h2 id="the-grow-trick"><a class="header" href="#the-grow-trick">The grow trick</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// update() does this every frame:
+push_front(new_head)
+pop_back()           // ← normally drops the tail
+
+// on eat, we push a tail duplicate BEFORE the next update():
+push_back(tail_copy)
+
+// next frame's update():
+push_front(new_head)
+pop_back()           // drops the duplicate, original tail survives
+                     // net length: +1
+<span class="boring">}</span></code></pre>
+<p>No “growing” state flag, no special case in <code>update()</code>. The deque handles it
+naturally.</p>
+<h2 id="if-let-chains-for-the-eat-check"><a class="header" href="#if-let-chains-for-the-eat-check"><code>if let</code> chains for the eat check</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>if let Some(&amp;(hx, hy)) = snake.body.front()
+    &amp;&amp; hx == food.x
+    &amp;&amp; hy == food.y
+<span class="boring">}</span></code></pre>
+<p><code>body.front()</code> returns <code>Option&lt;&amp;(u16, u16)&gt;</code>. We destructure it with
+<code>if let Some(&amp;(hx, hy))</code>. The <code>&amp;&amp;</code> chains additional conditions — all must be
+true for the block to run. If the body is somehow empty, the <code>None</code> case is
+handled safely (block skipped).</p>
+<p>This can be confusing at first: the &amp; reference operator appears to be
+destructuring a reference rather than creating one.</p>
+<p>The secret to unlocking this is to recognize that &amp; does two entirely opposite
+things depending on which side of the equal sign it is on:</p>
+<p>The Two faces of <code>&amp;</code></p>
+<pre><code class="language-rs">let data = &amp;value;   // 1. EXPRESSION: Creates a reference
+let &amp;value = data;   // 2. PATTERN: Destructures a reference
+</code></pre>
+<ol>
+<li>On the RIGHT side (An Action/Expression)</li>
+</ol>
+<p>When you use <code>&amp;</code> in normal code, it’s an <strong>operator</strong>. It means “Give me the
+address of this thing.”</p>
+<pre><code class="language-rs">let x = 5;
+let y = &amp;x;  // y is now a pointer to x (&amp;i32)
+</code></pre>
+<ol start="2">
+<li>On the LEFT side (A Blueprint / Pattern)</li>
+</ol>
+<p>When you use <code>&amp;</code> inside an <code>if let</code> or <code>match</code>, it is not an operator. It is a
+structural blueprint (a pattern). You are telling Rust what the data already
+looks like, so Rust can unpack it.</p>
+<p>Think of it like an allergy warning on a food box: If a box says [Contains:
+Peanut], it doesn’t mean the box is adding a peanut. It means: “Hey, if you open
+this up, you will find a peanut inside.”</p>
+<p>When you write:</p>
+<pre><code class="language-rs">if let Some(&amp;(hx, hy)) = snake.body.front()
+</code></pre>
+<p>The data coming out of <code>front()</code> is an enum variant containing a reference:
+<code>Some(&amp;Tuple)</code>. Your pattern on the left says: “I expect a box labeled <code>Some</code>
+containing a reference to a tuple. Rust, match my blueprint, peel those layers
+off, copy the inner scalar values (thanks to the <code>Copy</code> trait on <code>u16</code>), and
+give me the raw <code>hx</code> and <code>hy</code> variables.”</p>
+<h2 id="saturating_sub"><a class="header" href="#saturating_sub"><code>saturating_sub</code></a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>rng.random_range(0..height.saturating_sub(1))
+<span class="boring">}</span></code></pre>
+<p><code>height - 1</code> on a <code>u16</code> would panic (debug) or wrap to 65535 (release) if
+<code>height</code> were 0. <code>saturating_sub</code> clamps to 0 instead. For any real terminal
+this is unreachable, but it makes the intent explicit: “I want height minus 1,
+but never negative.”</p>
+<h2 id="randrng-and-mut-rng"><a class="header" href="#randrng-and-mut-rng"><code>rand::rng()</code> and <code>mut rng</code></a></h2>
+<p><code>rand::rng()</code> returns the thread-local RNG. Calling <code>.random_range()</code> advances
+its internal state (that’s how it generates different numbers each call) —
+mutation. Hence <code>mut rng</code>. The <code>RngExt</code> trait (imported via <code>use rand::RngExt</code>)
+provides the <code>.random_range()</code> and <code>.random_bool()</code> methods.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="commit-07--feat-speed-scaling-with-score"><a class="header" href="#commit-07--feat-speed-scaling-with-score">Commit 07 — <code>feat: speed scaling with score</code></a></h1>
+<pre><code>jj desc -m "feat: speed scaling with score"
+</code></pre>
+<p><code>cargo run</code> → game gets faster as you eat food, resets on death.</p>
+<h2 id="speed-formula"><a class="header" href="#speed-formula">Speed formula</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let reduction = speed.as_millis() / 20;   // 5% of current speed
+speed = speed
+    .saturating_sub(Duration::from_millis(reduction))
+    .max(Duration::from_millis(25));
+<span class="boring">}</span></code></pre>
+<p>Each food eaten: speed -= 5% of current speed. This is exponential decay — the
+reductions get smaller as speed gets faster:</p>
+<ul>
+<li>100ms → 95ms (-5ms)</li>
+<li>95ms → 90.25ms (-4.75ms)</li>
+<li>…</li>
+<li>Asymptotically approaches 0, floored at 25ms</li>
+</ul>
+<h2 id="method-chaining"><a class="header" href="#method-chaining">Method chaining</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>speed = speed.saturating_sub(...).max(...)
+<span class="boring">}</span></code></pre>
+<p>Each method returns a <code>Duration</code>. The next method is called on that returned
+value. This is idiomatic Rust for transformations.(reads left to right: “take
+speed, subtract, then take the max with 25ms.”)</p>
+<h2 id="u128--u64"><a class="header" href="#u128--u64"><code>u128</code> → <code>u64</code></a></h2>
+<p><code>Duration::as_millis()</code> returns <code>u128</code>. <code>Duration::from_millis()</code> takes <code>u64</code>.
+You can’t pass one to the other directly.</p>
+<ul>
+<li><code>value as u64</code> silently truncates if value &gt; <code>u64::MAX</code> (silent bug)</li>
+<li><code>u64::try_from(value)</code> returns <code>Result::Err</code> if it can’t fit</li>
+</ul>
+<p>For a speed value that starts at 100 and only decreases, u64 will never
+overflow. <code>expect()</code> documents this reasoning: if you ever see that panic, it
+means the invariant was violated.</p>
+<h2 id="the-game-is-complete"><a class="header" href="#the-game-is-complete">The game is complete</a></h2>
+<p>At this point you have a fully playable snake game. The next commits add polish:
+autopilot mode and extracted helper functions.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="commit-08--feat-autopilot-mode-with-mode-enum"><a class="header" href="#commit-08--feat-autopilot-mode-with-mode-enum">Commit 08 — <code>feat: autopilot mode with Mode enum</code></a></h1>
+<pre><code>git commit -m "feat: autopilot mode with Mode enum"
+</code></pre>
+<p><code>cargo run</code> → starts in AUTO, watch it play. Press arrows to take over, <code>a</code> to hand back.</p>
+<h2 id="derivepartialeq"><a class="header" href="#derivepartialeq"><code>#[derive(PartialEq)]</code></a></h2>
+<p><code>#[derive(...)]</code> is a procedural macro that runs at compile time and
+generates trait implementations for you. <code>PartialEq</code> enables <code>==</code> and <code>!=</code>.</p>
+<p>The generated code compares enum <em>discriminants</em> (the internal integer
+tag for “which variant is this”). For <code>Mode</code>, <code>Auto == Auto</code> is true,
+<code>Auto == Manual</code> is false.</p>
+<p>You can only derive <code>PartialEq</code> if all fields also implement <code>PartialEq</code>.
+<code>Mode</code> has no fields, so it trivially qualifies.</p>
+<h2 id="greedy-autopilot"><a class="header" href="#greedy-autopilot">Greedy autopilot</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>if hx &lt; food_x &amp;&amp; self.dir != LEFT  { self.set_direction(RIGHT); }
+else if hx &gt; food_x ...
+else if hy &lt; food_y ...
+else if hy &gt; food_y ...
+<span class="boring">}</span></code></pre>
+<p>Moves toward food along the X axis first, then Y. This produces a
+right-angle path. It works until the snake is long enough to block
+its own path — watch where it dies. That failure mode is the
+interesting part: the AI has no lookahead.</p>
+<p>An improvement would be BFS (breadth-first search) to find the
+shortest safe path. That’s a meaningful next project.</p>
+<h2 id="autopilot-runs-before-update"><a class="header" href="#autopilot-runs-before-update">autopilot runs BEFORE update</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>if mode == Mode::Auto { snake.autopilot(food.x, food.y); }
+// ...
+snake.update(w, h - 1);
+<span class="boring">}</span></code></pre>
+<p>The direction change from <code>autopilot</code> must take effect before the
+snake moves. If you called <code>autopilot</code> after <code>update</code>, the direction
+change wouldn’t show until the following frame — one step late.</p>
+<h2 id="mode--modeauto"><a class="header" href="#mode--modeauto"><code>mode == Mode::Auto</code></a></h2>
+<p>This works because of <code>#[derive(PartialEq)]</code>. Without it, the compiler
+would say “binary operation <code>==</code> cannot be applied to type <code>Mode</code>.”</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="chapter-9"><a class="header" href="#chapter-9">Chapter 9</a></h1>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+
+    </div>
+    </body>
+</html>

@@ -1,67 +1,79 @@
-# nix-snake ❄️🐍
+# nix-snake — a Rust learning resource
 
-A lightweight, terminal-based Snake game and screensaver written in Rust.
+A terminal snake game built commit-by-commit the way you'd actually write it:
+get something on screen first, then iterate.
 
-![snowflake-bounce demo](https://raw.githubusercontent.com/saylesss88/nix-snake/main/assets/demo.gif)
+```
+cargo run
+```
 
-Watch a NixOS Lambda (λ) navigate your terminal, consuming snowflakes and
-packages in an infinite loop, or take control and play yourself.
-
-**Status: Active Development** 🚧
+Controls: arrow keys to play · `a` for autopilot · `q` / Esc to quit
 
 ---
 
-## ✨ Features
+## How to use this
 
-- 🖥️ Screensaver Mode (Autopilot): The snake plays itself using a greedy
-  pathfinding algorithm. Perfect for a terminal background.
+I created an mdBook out of the "Commits" for this project in
+the `docs/` folder. To open the book in your browser, cd to
+the `docs/` folder and run `mdbook serve --open`.
 
-- 🎮 Seamless Override: Press any arrow key to instantly switch from
-  "Screensaver" to "Manual" mode. Press a to switch back.
+Each Chapter in `docs/` is one commit. Read `COMMIT.md` first (the _why_), then
+try to write the code yourself before looking at `main.rs`.
 
-- ❄️ NixOS Themed: The snake head is a Lambda (λ), eating snowflakes (❄) and
-  packages (📦).
+The progression:
 
-- 🚀 Performance: Built with pure crossterm for low-latency rendering and
-  minimal resource usage.
-
-- 🔄 Infinity Walls: The world wraps around the edges of your terminal.
-
----
-
-## 📦 Installation From Source
-
-Ensure you have Rust and Cargo installed.
-
-```bash
-git clone https://github.com/saylesss88/nix-snake cd nix-snake
-cargo install --path .
-```
-
-crates.io
-
-```bash
-cargo install nix-snake
-```
-
-Nix:
-
-```bash
-nix run github:saylesss88/nix-snake
-# If it gives you problems try:
-nix run --no-write-lock-file github:saylesss88/nix-snake
-```
+| Commit | What you see when you `cargo run`        | New concepts                                     |
+| ------ | ---------------------------------------- | ------------------------------------------------ |
+| 01     | cyan λ appears for 2 seconds             | raw mode, alternate screen, `execute!`           |
+| 02     | λ crawls across the screen               | game loop, `clear`, `flush`                      |
+| 03     | λ wraps at screen edges                  | `Direction` type, `rem_euclid`, type conversions |
+| 04     | arrow keys steer it, `q` exits cleanly   | `poll`, non-blocking input, let chains           |
+| 05     | snake has a tail, dies on self-collision | `VecDeque`, `Snake` struct, iterator combinators |
+| 06     | food spawns, eating it grows the snake   | `Food` struct, `rand`, the grow trick            |
+| 07     | game speeds up as score increases        | `saturating_sub`, `try_from`, method chaining    |
+| 08     | `a` key hands control to autopilot       | `Mode` enum, `#[derive(PartialEq)]`, greedy AI   |
+| 09     | same as 08, but code is organized        | extract functions, `queue!`, panic hook          |
 
 ---
 
-## 🕹️ Controls
+## Architecture notes
 
-- `a`: Switch to Autopilot (Screensaver) Mode
+**Why VecDeque?** Snake movement = push head at front + pop tail from back. Both
+O(1) on a `VecDeque`. `Vec::insert(0, ...)` is `O(n)`.
 
-- `q`/ `Esc`: Quit
+**Why `(i16, i16)` for direction but `(u16, u16)` for position?** Positions are
+terminal coordinates — always non-negative, `crossterm` uses `u16`. Directions
+are deltas, need to express `-1`. Different kinds of numbers get different
+types.
 
-- Arrow keys: Start playing
+**Why `rem_euclid` instead of `%`?** `-1 % 40 = -1` in Rust.
+`-1_i32.rem_euclid(40) = 39`. Wrapping at screen edges requires true modulo, not
+remainder.
 
-- The speed gets faster with every package/snowflake eaten
+**Why `queue!` + one `flush()` instead of `execute!` per command?** `execute!`
+syscalls on every command. `queue!` buffers everything and `flush()` sends it
+all at once. (one syscall per frame).
 
-- The screen flashes red on death & auto-restarts with a body length of 3
+**Why a panic hook?** Raw mode + a crash = broken shell. The hook restores the
+terminal before the panic message prints.
+
+---
+
+## Suggested exercises (after commit 09)
+
+1. **Food spawns on snake** — `respawn()` doesn't check body positions. Fix:
+   accept `&VecDeque<(u16,u16)>` and loop until you find a free cell.
+
+2. **Greedy AI traps itself** — watch where it dies. Improve it with BFS to find
+   a safe path instead of just heading toward food.
+
+3. **Fixed start position** — snake always starts at (10,10). Start at center:
+   `(term_cols / 2, term_rows / 2)`.
+
+4. **Wall mode** — add a `Mode::Wall` where hitting the edge kills you.
+
+5. **Frame timing drift** — `sleep(speed)` doesn't account for game logic time.
+   Use `std::time::Instant` to measure and compensate.
+
+6. **High score** — persist to `~/.local/share/nix-snake/highscore` using
+   `std::fs::read_to_string` and `std::fs::write`.
