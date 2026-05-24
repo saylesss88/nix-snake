@@ -1,7 +1,16 @@
 [package]
 name = "nix-snake"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2024"
+authors = ["T. Sawyer <saylesss87@proton.me>"]
+license = "Apache-2.0"
+repository = "https://github.com/saylesss88/nix-snake"
+homepage = "https://github.com/saylesss88/nix-snake"
+description = "A terminal NixOS themed Snake game and interactive mdBook guide designed for learning the Rust."
+readme = "README.md"
+documentation = "https://docs.rs/nix-snake"
+keywords = ["game", "learn", "rust"]
+exclude = [".github", "*.gif", "*.png", "tests/", "benches/", "assets/"]
 
 [[bin]]
 name = "nix-snake"
