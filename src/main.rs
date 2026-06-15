@@ -16,14 +16,21 @@ use std::time::Duration;
 
 type Direction = (i16, i16);
 pub const RIGHT: Direction = (1, 0);
-pub const LEFT:  Direction = (-1, 0);
-pub const UP:    Direction = (0, -1);
-pub const DOWN:  Direction = (0, 1);
+pub const LEFT: Direction = (-1, 0);
+pub const UP: Direction = (0, -1);
+pub const DOWN: Direction = (0, 1);
 
 #[derive(PartialEq)]
-enum Mode { Auto, Manual }
+enum Mode {
+    Auto,
+    Manual,
+}
 
-struct Food { x: u16, y: u16, symbol: char }
+struct Food {
+    x: u16,
+    y: u16,
+    symbol: char,
+}
 impl Food {
     fn new(width: u16, height: u16) -> Self {
         let mut rng = rand::rng();
@@ -41,28 +48,37 @@ impl Food {
     }
 }
 
-struct Snake { body: VecDeque<(u16, u16)>, dir: Direction }
+struct Snake {
+    body: VecDeque<(u16, u16)>,
+    dir: Direction,
+}
 impl Snake {
     fn new() -> Self {
         let mut body = VecDeque::new();
-        body.push_back((10, 10)); body.push_back((9, 10)); body.push_back((8, 10));
+        body.push_back((10, 10));
+        body.push_back((9, 10));
+        body.push_back((8, 10));
         Self { body, dir: RIGHT }
     }
     fn reset(&mut self) {
         self.body.clear();
-        self.body.push_back((10, 10)); self.body.push_back((9, 10)); self.body.push_back((8, 10));
+        self.body.push_back((10, 10));
+        self.body.push_back((9, 10));
+        self.body.push_back((8, 10));
         self.dir = RIGHT;
     }
     fn update(&mut self, max_width: u16, max_height: u16) {
         let (hx, hy) = *self.body.front().expect("snake has no body");
-        let nx = (i32::from(hx)+i32::from(self.dir.0)).rem_euclid(i32::from(max_width));
-        let ny = (i32::from(hy)+i32::from(self.dir.1)).rem_euclid(i32::from(max_height));
+        let nx = (i32::from(hx) + i32::from(self.dir.0)).rem_euclid(i32::from(max_width));
+        let ny = (i32::from(hy) + i32::from(self.dir.1)).rem_euclid(i32::from(max_height));
         #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
         self.body.push_front((nx as u16, ny as u16));
         self.body.pop_back();
     }
     const fn set_direction(&mut self, new_dir: Direction) {
-        if (self.dir.0+new_dir.0 != 0) || (self.dir.1+new_dir.1 != 0) { self.dir = new_dir; }
+        if (self.dir.0 + new_dir.0 != 0) || (self.dir.1 + new_dir.1 != 0) {
+            self.dir = new_dir;
+        }
     }
     fn check_self_collision(&self) -> bool {
         let (hx, hy) = *self.body.front().expect("snake has no body");
@@ -70,10 +86,15 @@ impl Snake {
     }
     fn autopilot(&mut self, food_x: u16, food_y: u16) {
         let (hx, hy) = *self.body.front().expect("snake has no body");
-        if hx < food_x && self.dir != LEFT       { self.set_direction(RIGHT); }
-        else if hx > food_x && self.dir != RIGHT { self.set_direction(LEFT); }
-        else if hy < food_y && self.dir != UP    { self.set_direction(DOWN); }
-        else if hy > food_y && self.dir != DOWN  { self.set_direction(UP); }
+        if hx < food_x && self.dir != LEFT {
+            self.set_direction(RIGHT);
+        } else if hx > food_x && self.dir != RIGHT {
+            self.set_direction(LEFT);
+        } else if hy < food_y && self.dir != UP {
+            self.set_direction(DOWN);
+        } else if hy > food_y && self.dir != DOWN {
+            self.set_direction(UP);
+        }
     }
 }
 
@@ -96,10 +117,22 @@ fn handle_input(mode: &mut Mode, snake: &mut Snake, running: &mut bool) -> std::
         match code {
             KeyCode::Char('q') | KeyCode::Esc => *running = false,
             KeyCode::Char('a') => *mode = Mode::Auto,
-            KeyCode::Left  => { *mode = Mode::Manual; snake.set_direction(LEFT);  }
-            KeyCode::Right => { *mode = Mode::Manual; snake.set_direction(RIGHT); }
-            KeyCode::Up    => { *mode = Mode::Manual; snake.set_direction(UP);    }
-            KeyCode::Down  => { *mode = Mode::Manual; snake.set_direction(DOWN);  }
+            KeyCode::Left => {
+                *mode = Mode::Manual;
+                snake.set_direction(LEFT);
+            }
+            KeyCode::Right => {
+                *mode = Mode::Manual;
+                snake.set_direction(RIGHT);
+            }
+            KeyCode::Up => {
+                *mode = Mode::Manual;
+                snake.set_direction(UP);
+            }
+            KeyCode::Down => {
+                *mode = Mode::Manual;
+                snake.set_direction(DOWN);
+            }
             _ => {}
         }
     }
@@ -107,10 +140,18 @@ fn handle_input(mode: &mut Mode, snake: &mut Snake, running: &mut bool) -> std::
 }
 
 fn handle_collision(snake: &mut Snake, out: &mut std::io::Stdout) -> std::io::Result<()> {
-    execute!(out, SetBackgroundColor(Color::Red), terminal::Clear(terminal::ClearType::All))?;
+    execute!(
+        out,
+        SetBackgroundColor(Color::Red),
+        terminal::Clear(terminal::ClearType::All)
+    )?;
     out.flush()?;
     std::thread::sleep(Duration::from_millis(200));
-    execute!(out, SetBackgroundColor(Color::Reset), terminal::Clear(terminal::ClearType::All))?;
+    execute!(
+        out,
+        SetBackgroundColor(Color::Reset),
+        terminal::Clear(terminal::ClearType::All)
+    )?;
     snake.reset();
     Ok(())
 }
@@ -125,14 +166,38 @@ fn draw_game(
     term_rows: u16,
 ) -> std::io::Result<()> {
     queue!(out, terminal::Clear(terminal::ClearType::All))?;
-    queue!(out, cursor::MoveTo(food.x, food.y), SetForegroundColor(Color::Red), Print(food.symbol))?;
+    queue!(
+        out,
+        cursor::MoveTo(food.x, food.y),
+        SetForegroundColor(Color::Red),
+        Print(food.symbol)
+    )?;
     for (i, &(x, y)) in snake.body.iter().enumerate() {
         let ch = if i == 0 { "λ" } else { "o" };
-        queue!(out, cursor::MoveTo(x, y), SetForegroundColor(Color::Cyan), Print(ch))?;
+        queue!(
+            out,
+            cursor::MoveTo(x, y),
+            SetForegroundColor(Color::Cyan),
+            Print(ch)
+        )?;
     }
-    let mode_label = if *mode == Mode::Auto { "AUTO (arrows to play)" } else { "MANUAL (a for auto)" };
-    let status = format!("{} | Score: {} | Speed: {}ms", mode_label, score, speed.as_millis());
-    queue!(out, cursor::MoveTo(0, term_rows-1), SetForegroundColor(Color::Yellow), Print(status))?;
+    let mode_label = if *mode == Mode::Auto {
+        "AUTO (arrows to play)"
+    } else {
+        "MANUAL (a for auto)"
+    };
+    let status = format!(
+        "{} | Score: {} | Speed: {}ms",
+        mode_label,
+        score,
+        speed.as_millis()
+    );
+    queue!(
+        out,
+        cursor::MoveTo(0, term_rows - 1),
+        SetForegroundColor(Color::Yellow),
+        Print(status)
+    )?;
     out.flush()?;
     Ok(())
 }
@@ -174,14 +239,19 @@ fn main() -> std::io::Result<()> {
         }
 
         if let Some(&(hx, hy)) = snake.body.front()
-            && hx == food.x && hy == food.y
+            && hx == food.x
+            && hy == food.y
         {
             let (w, h) = terminal::size()?;
             food.respawn(w, h);
-            if let Some(&tail) = snake.body.back() { snake.body.push_back(tail); }
+            if let Some(&tail) = snake.body.back() {
+                snake.body.push_back(tail);
+            }
             score += 10;
             let reduction = u64::try_from(speed.as_millis() / 20).expect("fits in u64");
-            speed = speed.saturating_sub(Duration::from_millis(reduction)).max(Duration::from_millis(25));
+            speed = speed
+                .saturating_sub(Duration::from_millis(reduction))
+                .max(Duration::from_millis(25));
         }
 
         draw_game(&mut out, &snake, &food, &mode, score, speed, term_rows)?;
@@ -190,4 +260,42 @@ fn main() -> std::io::Result<()> {
 
     restore_terminal()?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    // use crossterm::{
+    //     cursor, execute,
+    //     style::{Color, Print, SetForegroundColor},
+    //     terminal,
+    // };
+
+    // The real question commit 01 answers: does our setup/teardown sequence
+    // complete without error? We can verify that against a Vec<u8> (a fake
+    // "terminal") instead of stdout, so it runs headless in CI too.
+    #[test]
+    fn draw_sequence_produces_output() {
+        let mut buf: Vec<u8> = Vec::new();
+
+        // If any of these would panic or error, the test catches it
+        execute!(
+            &mut buf,
+            terminal::EnterAlternateScreen,
+            cursor::Hide,
+            cursor::MoveTo(10, 10),
+            SetForegroundColor(Color::Cyan),
+            Print("λ"),
+            terminal::LeaveAlternateScreen,
+            cursor::Show,
+        )
+        .unwrap();
+
+        // We wrote *something* — ANSI escape bytes went somewhere
+        assert!(!buf.is_empty(), "expected ANSI bytes, got nothing");
+
+        // λ is in there as UTF-8
+        let out = String::from_utf8_lossy(&buf);
+        assert!(out.contains('λ'), "expected λ in output");
+    }
 }
